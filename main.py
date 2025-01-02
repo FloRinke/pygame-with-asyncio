@@ -2,11 +2,12 @@
 
 import asyncio
 import time
-
+import logging
 import pygame
 
+log = logging.getLogger(__name__)
 
-FPS = 100
+FPS = 2
 width, height = 700, 400
 
 
@@ -39,10 +40,13 @@ async def animation(screen, ball):
     current_time = 0
     while True:
         last_time, current_time = current_time, time.time()
+        # sleeptime = 1 / FPS - (current_time - last_time)  # original calculation
+        sleeptime = min(1 / FPS - (current_time - last_time - 1 / FPS), 1 / FPS)  # changed calculation
+        log.debug("animation called after %f, next sleep is %f", current_time - last_time, sleeptime)
         # call usually takes  a bit longer than ideal for framerate, so subtract from next wait
         # sleeptime = 1/FPS - delayed = 1/FPS - (now-last-1/FPS)
         # also limit max delay to avoid issues with asyncio.sleep() returning immediately for negative values
-        await asyncio.sleep(min(1 / FPS - (current_time - last_time - 1 / FPS), 1 / FPS))  # tick
+        await asyncio.sleep(sleeptime)
         ball.move()
         screen.fill(black)
         ball.draw(screen)
@@ -93,4 +97,5 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     main()
